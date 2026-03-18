@@ -1,0 +1,96 @@
+# OBJECTS = loader.o kmain.o io.o io_asm.o
+# CC = gcc
+# CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector \
+#      -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -g
+# LDFLAGS = -T link.ld -melf_i386
+# AS = nasm
+# ASFLAGS = -f elf
+#
+# all: kernel.elf
+#
+# kernel.elf: $(OBJECTS)
+# 	ld $(LDFLAGS) $(OBJECTS) -o kernel.elf
+#
+# cornos.iso: kernel.elf
+# 	cp kernel.elf iso/boot/kernel.elf
+# 	grub-mkrescue -o target/cornos.iso iso
+#
+# run: cornos.iso
+# 	qemu-system-i386 -cdrom target/cornos.iso -s -S
+#
+# %.o: %.c
+# 	$(CC) $(CFLAGS)  $< -o $@
+#
+# %.o: %.s
+# 	$(AS) $(ASFLAGS) $< -o $@
+#
+# clean:
+# 	rm -rf *.o kernel.elf target/cornos.iso
+#
+#
+# Directories
+SRC_DIR := src
+INC_DIR := inc
+BUILD_DIR := build
+C_OBJ_DIR := $(BUILD_DIR)/c_objects
+ASM_OBJ_DIR := $(BUILD_DIR)/asm_objects
+
+ISO_DIR := iso
+TARGET_DIR := target
+
+# Tools
+CC := gcc
+AS := nasm
+LD := ld
+
+# Flags
+CFLAGS := -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector \
+          -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -g \
+          -I$(INC_DIR)
+
+ASFLAGS := -f elf
+LDFLAGS := -T link.ld -melf_i386
+
+# Sources
+C_SOURCES := $(wildcard $(SRC_DIR)/*.c)
+ASM_SOURCES := $(wildcard $(SRC_DIR)/*.s)
+
+# Objects (keep names separate to avoid io.c vs io.s conflict)
+C_OBJECTS := $(patsubst $(SRC_DIR)/%.c,$(C_OBJ_DIR)/%.o,$(C_SOURCES))
+ASM_OBJECTS := $(patsubst $(SRC_DIR)/%.s,$(ASM_OBJ_DIR)/%.o,$(ASM_SOURCES))
+
+OBJECTS := $(C_OBJECTS) $(ASM_OBJECTS)
+
+# Targets
+all: kernel.elf
+
+kernel.elf: $(OBJECTS)
+	$(LD) $(LDFLAGS) $^ -o $@
+
+$(TARGET_DIR)/cornos.iso: kernel.elf
+	mkdir -p $(ISO_DIR)/boot
+	mkdir -p $(TARGET_DIR)
+	cp kernel.elf $(ISO_DIR)/boot/kernel.elf
+	grub-mkrescue -o $(TARGET_DIR)/cornos.iso $(ISO_DIR)
+
+run: $(TARGET_DIR)/cornos.iso
+	qemu-system-i386 -serial file:serial.log -cdrom $(TARGET_DIR)/cornos.iso -s -S
+
+debug:
+	gdb kernel.elf
+
+
+# Compile C
+$(C_OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	mkdir -p $(C_OBJ_DIR)
+	$(CC) $(CFLAGS) $< -o $@
+
+# Compile ASM
+$(ASM_OBJ_DIR)/%.o: $(SRC_DIR)/%.s
+	mkdir -p $(ASM_OBJ_DIR)
+	$(AS) $(ASFLAGS) $< -o $@
+
+clean:
+	rm -rf $(BUILD_DIR) kernel.elf $(TARGET_DIR)
+
+.PHONY: all clean run
