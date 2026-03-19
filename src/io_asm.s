@@ -1,5 +1,6 @@
 global outb
 global inb
+global load_gdt
                                 ; make the labels visible outside this file
 
                                 ; outb - send a byte to an I/O port
@@ -20,3 +21,12 @@ inb:
         mov dx, [esp + 4]       ; move the address of the I/O port to the dx register
         in  al, dx              ; read a byte from the I/O port and store it in the al register
         ret                     ; return the read byte
+
+ 
+                                ; load_gdt - loads the gdt table from a defined struct
+                                ; stack: [esp + 4] The address of the gdt struct
+                                ;        [esp    ] The return address
+
+load_gdt:
+        mov eax, [esp + 4]      ; move the address to the gdt struct to the eax register
+        lgdt [eax]              ; load the gdt table defined in the struct

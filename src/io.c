@@ -138,6 +138,8 @@ int serial_is_transmit_fifo_empty(unsigned int com)
         */
 void serial_write_char(unsigned short com, char c)
 {
+        while(!serial_is_transmit_fifo_empty(com)); // Doing nothing until the fifo is empty
+
         outb(SERIAL_DATA_PORT(com), c);
 }
 
