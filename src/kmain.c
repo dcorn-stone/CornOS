@@ -21,12 +21,7 @@
 #define FB_WHITE         15
 
 #include "io.h"
-
-/* gdt: Struct containing the base address and the limit of a Global Descriptor Table */
-struct gdt {
-        unsigned int address; // The base address of the gdt
-        unsigned short size; // The limit/size of the gdt
-} __attribute__((packed));
+#include "mem_init.h"
 
 /** cstrlen:
         *  Count length of a charater buffer
