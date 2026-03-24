@@ -2,6 +2,10 @@ global outb
 global inb
 global load_gdt
 global reload_segments
+global load_idt
+
+global pause
+
                                 ; make the labels visible outside this file
 
 
@@ -51,5 +55,13 @@ reload_segments:                ; reload the CS register containing code selecto
         sti
         ret
 
+load_idt:
+        mov eax, [esp + 4]      ; load the address of the IDT passed
+        lidt [eax]              ; load the Interrupt Descriptor Table
+        ret
 
 
+pause:
+        cli
+        hlt
+        jmp $

@@ -1,7 +1,25 @@
 #include "mem_init.h"
 
 
-/** gdt_entry
+/* gdt_ptr: Struct containing the base address and the limit of a Global Descriptor Table */
+struct gdt_ptr {
+        unsigned short size; // The limit/size of the gdt     0-15 bit
+        unsigned int address; // The base address of the gdt  16-31 bit
+} __attribute__((packed));
+
+/** load_gdt:
+        *  Loads the Global Descriptor Table
+        *
+        *  @param *gdt The struct pointer to the GDT with its base address and limit
+        */
+void load_gdt(struct gdt_ptr *gdt);
+
+/** reload_segments:
+        *  Reloads the segment registers
+        */
+void reload_segments();
+
+/** gdt_entry:
         * Sturcture of every entry (segment descriptor) in the GDT */
 struct gdt_entry {
         unsigned short limit_low; // byte 0 - 1
@@ -17,6 +35,9 @@ struct gdt_entry {
 
 } __attribute__((packed));
 
+/** protected_mode_gdt:
+        *  Sets up the GDT for protected mode segmentation
+        */
 void protected_mode_gdt()
 {
         static struct gdt_entry gdt[5];

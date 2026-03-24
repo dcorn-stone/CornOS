@@ -1,4 +1,5 @@
 #define FRAME_BUFFER 0x000B8000
+
 #define SERIAL_COM1_BASE                0x3F8      /* COM1 base port */
 
 #define VGA_WIDTH 80
@@ -20,8 +21,10 @@
 #define FB_LIGHT_BROWN   14
 #define FB_WHITE         15
 
+#include "kmain.h"
 #include "io.h"
 #include "mem_init.h"
+#include "interrupts.h"
 
 /** cstrlen:
         *  Count length of a charater buffer
@@ -139,12 +142,19 @@ void kmain()
         fb_clear();
 
         char *greet = "Hello World!!!";
-        char *something = "Happy birthday to you \nDaniel\n!!!";
+        char *something = "Happy birthday to you Daniel!!!\n ";
 
         cprint(0, greet, 2);
 
         cprint(cstrlen(greet), something, 2);
 
+        protected_mode_gdt();
+        cprint(cstrlen(greet) + cstrlen(something), "Protected mode segmentation is set and loaded", 2);
+
+        create_idt();
+        cprint(cstrlen(greet) + cstrlen(something) + cstrlen("Protected mode segmentation is set and loaded"), " IDT loaded", 2);
+
+        pause();
 }
 
 

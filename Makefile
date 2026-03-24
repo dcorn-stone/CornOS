@@ -1,33 +1,3 @@
-# OBJECTS = loader.o kmain.o io.o io_asm.o
-# CC = gcc
-# CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector \
-#      -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -g
-# LDFLAGS = -T link.ld -melf_i386
-# AS = nasm
-# ASFLAGS = -f elf
-#
-# all: kernel.elf
-#
-# kernel.elf: $(OBJECTS)
-# 	ld $(LDFLAGS) $(OBJECTS) -o kernel.elf
-#
-# cornos.iso: kernel.elf
-# 	cp kernel.elf iso/boot/kernel.elf
-# 	grub-mkrescue -o target/cornos.iso iso
-#
-# run: cornos.iso
-# 	qemu-system-i386 -cdrom target/cornos.iso -s -S
-#
-# %.o: %.c
-# 	$(CC) $(CFLAGS)  $< -o $@
-#
-# %.o: %.s
-# 	$(AS) $(ASFLAGS) $< -o $@
-#
-# clean:
-# 	rm -rf *.o kernel.elf target/cornos.iso
-#
-#
 # Directories
 SRC_DIR := src
 INC_DIR := inc
@@ -55,7 +25,7 @@ LDFLAGS := -T link.ld -melf_i386
 C_SOURCES := $(wildcard $(SRC_DIR)/*.c)
 ASM_SOURCES := $(wildcard $(SRC_DIR)/*.s)
 
-# Objects (keep names separate to avoid io.c vs io.s conflict)
+# Objects
 C_OBJECTS := $(patsubst $(SRC_DIR)/%.c,$(C_OBJ_DIR)/%.o,$(C_SOURCES))
 ASM_OBJECTS := $(patsubst $(SRC_DIR)/%.s,$(ASM_OBJ_DIR)/%.o,$(ASM_SOURCES))
 
@@ -73,9 +43,11 @@ $(TARGET_DIR)/cornos.iso: kernel.elf
 	cp kernel.elf $(ISO_DIR)/boot/kernel.elf
 	grub-mkrescue -o $(TARGET_DIR)/cornos.iso $(ISO_DIR)
 
+# Run in emulator
 run: $(TARGET_DIR)/cornos.iso
 	qemu-system-i386 -serial file:serial.log -cdrom $(TARGET_DIR)/cornos.iso -s -S
 
+# Debug
 debug:
 	gdb kernel.elf
 
