@@ -22,12 +22,12 @@ ASFLAGS := -f elf
 LDFLAGS := -T link.ld -melf_i386
 
 # Sources
-C_SOURCES := $(wildcard $(SRC_DIR)/*.c)
-ASM_SOURCES := $(wildcard $(SRC_DIR)/*.s)
+C_SOURCES := $(wildcard $(SRC_DIR)/c/*.c)
+ASM_SOURCES := $(wildcard $(SRC_DIR)/asm/*.s)
 
 # Objects
-C_OBJECTS := $(patsubst $(SRC_DIR)/%.c,$(C_OBJ_DIR)/%.o,$(C_SOURCES))
-ASM_OBJECTS := $(patsubst $(SRC_DIR)/%.s,$(ASM_OBJ_DIR)/%.o,$(ASM_SOURCES))
+C_OBJECTS := $(patsubst $(SRC_DIR)/c/%.c,$(C_OBJ_DIR)/%.o,$(C_SOURCES))
+ASM_OBJECTS := $(patsubst $(SRC_DIR)/asm/%.s,$(ASM_OBJ_DIR)/%.o,$(ASM_SOURCES))
 
 OBJECTS := $(C_OBJECTS) $(ASM_OBJECTS)
 
@@ -43,9 +43,13 @@ $(TARGET_DIR)/cornos.iso: kernel.elf
 	cp kernel.elf $(ISO_DIR)/boot/kernel.elf
 	grub-mkrescue -o $(TARGET_DIR)/cornos.iso $(ISO_DIR)
 
+# Run in emulator with debugging
+drun: $(TARGET_DIR)/cornos.iso
+	qemu-system-i386 -serial file:serial.log -cdrom $(TARGET_DIR)/cornos.iso -s -S
+
 # Run in emulator
 run: $(TARGET_DIR)/cornos.iso
-	qemu-system-i386 -serial file:serial.log -cdrom $(TARGET_DIR)/cornos.iso -s -S
+	qemu-system-i386 -serial file:serial.log -cdrom $(TARGET_DIR)/cornos.iso
 
 # Debug
 debug:
@@ -53,12 +57,12 @@ debug:
 
 
 # Compile C
-$(C_OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+$(C_OBJ_DIR)/%.o: $(SRC_DIR)/c/%.c
 	mkdir -p $(C_OBJ_DIR)
 	$(CC) $(CFLAGS) $< -o $@
 
 # Compile ASM
-$(ASM_OBJ_DIR)/%.o: $(SRC_DIR)/%.s
+$(ASM_OBJ_DIR)/%.o: $(SRC_DIR)/asm/%.s
 	mkdir -p $(ASM_OBJ_DIR)
 	$(AS) $(ASFLAGS) $< -o $@
 
