@@ -6,4 +6,6 @@
         */
 void create_idt();
 
+void pic_init();
+
 #endif /* INCLUDE_INTERRUPTS_H */

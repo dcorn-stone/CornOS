@@ -62,6 +62,6 @@ load_idt:
 
 
 pause:
-        cli
+        sti
         hlt
         jmp $

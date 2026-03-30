@@ -154,6 +154,8 @@ void kmain()
         create_idt();
         cprint(cstrlen(greet) + cstrlen(something) + cstrlen("Protected mode segmentation is set and loaded"), " IDT loaded", 2);
 
+        pic_init();
+
         pause();
 }
 

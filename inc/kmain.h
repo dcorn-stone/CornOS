@@ -31,7 +31,10 @@ unsigned int cstrlen(const char *str);
         */
 int cprint(unsigned int pos, const char *buf, unsigned char mode);
 
-
+/** fb_clear:
+        *  Clears the frame buffer (make blank screen)
+        */
+void fb_clear();
 
 
 #endif /* INCLUDE_MAIN_H */

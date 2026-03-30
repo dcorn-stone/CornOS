@@ -136,8 +136,11 @@ unsigned char read_scan_code()
         return inb(KBD_DATA_PORT);
 }
 
-void irq_keyboard_handler(){
-
+void irq_1_keyboard_interrupt_handler(){
+        fb_clear();
+        char scan_code = read_scan_code();
+        cprint(0, &scan_code, 2);
+        
 }
 
 /* create_idt:
@@ -179,6 +182,7 @@ void create_idt()
         set_idt_entry(&idt[29], (unsigned int)interrupt_handler_29);
         set_idt_entry(&idt[30], (unsigned int)interrupt_handler_30);
         set_idt_entry(&idt[31], (unsigned int)interrupt_handler_31);
+        set_idt_entry(&idt[33], (unsigned int)irq_1_keyboard_interrupt_handler);
         
         struct idt_ptr idt_address;
         idt_address.address = (unsigned int)idt;
@@ -186,6 +190,7 @@ void create_idt()
 
         load_idt(&idt_address);
 }
+
 
 /*  pic_sendEOI:
  *  Tells the PIC that the IRQ is handled and the process is finished
@@ -294,5 +299,13 @@ void irq_clear_mask(unsigned char irq_line)
 void interrupt_handler(struct interrupt_stack_state *stack){
         stack += 1;
         pause();        
+}
+
+
+void pic_init()
+{
+        pic_remap(PIC1_NEW_OFFSET, PIC2_NEW_OFFSET);
+        pic_disable();
+        irq_clear_mask(1); // Unmask keyboard interrupt
 }
 
