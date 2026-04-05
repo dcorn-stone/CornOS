@@ -43,7 +43,7 @@ void io_wait()
         *
         *  @param pos The new position of the cursor
         */
-void fb_move_cursor(unsigned short pos)
+void fb_move_cursor(uint16_t pos)
 {
         outb(FB_COMMAND_PORT, FB_HIGH_BYTE_COMMAND);
         outb(FB_DATA_PORT, ((pos >> 8) & 0x00ff));
@@ -59,7 +59,7 @@ void fb_move_cursor(unsigned short pos)
         *  @param com      The COM port to configure
         *  @param divisor  The divisor
         */
-void serial_configure_baud_rate(unsigned short com, unsigned short divisor)
+void serial_configure_baud_rate(uint16_t com, uint16_t divisor)
 {
         outb(SERIAL_LINE_COMMAND_PORT(com), SERIAL_LINE_ENABLE_DLAB);
         outb(SERIAL_DATA_PORT(com), ((divisor >> 8) & 0x00ff));
@@ -73,7 +73,7 @@ void serial_configure_baud_rate(unsigned short com, unsigned short divisor)
         *
         *  @param com  The serial port to configure
         */
-void serial_configure_line(unsigned short com)
+void serial_configure_line(uint16_t com)
 {
         /*
          * d 	Enables (d = 1) or disables (d = 0) DLAB
@@ -98,7 +98,7 @@ void serial_configure_line(unsigned short com)
         *
         *  @param com  The serial port to configure
         */
-void serial_configure_buffer(unsigned short com)
+void serial_configure_buffer(uint16_t com)
 {
         /*
          *  Bit:     | 7 6 | 5  | 4 | 3   | 2   | 1   | 0 |
@@ -113,7 +113,7 @@ void serial_configure_buffer(unsigned short com)
         *
         *  @param com  The serial port to configure
         */
-void serial_configure_modem(unsigned short com)
+void serial_configure_modem(uint16_t com)
 {
         /*  Bit:     | 7 | 6 | 5  | 4  | 3   | 2   | 1   | 0   |
          *  Content: | r | r | af | lb | ao2 | ao1 | rts | dtr |
@@ -130,7 +130,7 @@ void serial_configure_modem(unsigned short com)
         *  @return 0 if the transmit FIFO queue is not empty
         *          1 if the transmit FIFO queue is empty
         */
-int serial_is_transmit_fifo_empty(unsigned int com)
+int serial_is_transmit_fifo_empty(uint32_t com)
 {
         /* 0x20 = 0010 0000 */
         /* 5th bit of the line status byte indicates if the fifo is empty */
@@ -143,7 +143,7 @@ int serial_is_transmit_fifo_empty(unsigned int com)
         *  @param com The COM port
         *  @param c   The character to write to the serial port
         */
-void serial_write_char(unsigned short com, char c)
+void serial_write_char(uint16_t com, char c)
 {
         while(!serial_is_transmit_fifo_empty(com)); // Doing nothing until the fifo is empty
 

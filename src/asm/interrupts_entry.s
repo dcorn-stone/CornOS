@@ -17,13 +17,7 @@ interrupt_handler_%1:
 
 generic_handler:
         ; save all general purpose registers
-        push ebp
-        push edi
-        push esi
-        push edx
-        push ecx
-        push ebx
-        push eax
+        pushad
 
         ; pass the pointer to the struct to the C function
         push esp
@@ -35,18 +29,12 @@ generic_handler:
         add esp, 4
 
         ; clean up stack
-        pop eax
-        pop ebx
-        pop ecx
-        pop edx
-        pop esi
-        pop edi
-        pop ebp
+        popad
 
         ; restore the esp
         add esp, 8
         
-        ; return from to interrupted program
+        ; return to interrupted program
         iret
 
 no_error_code_interrupt_handler 0
@@ -82,3 +70,4 @@ error_code_interrupt_handler 29
 error_code_interrupt_handler 30
 no_error_code_interrupt_handler 31
 
+no_error_code_interrupt_handler 33

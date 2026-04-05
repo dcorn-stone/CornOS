@@ -14,7 +14,7 @@ AS := nasm
 LD := ld
 
 # Flags
-CFLAGS := -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector \
+CFLAGS := -m32 -nostdlib -ffreestanding -fno-builtin -fno-stack-protector -mgeneral-regs-only\
           -nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c -g \
           -I$(INC_DIR)
 

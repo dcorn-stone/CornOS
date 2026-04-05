@@ -1,27 +1,25 @@
-#include <kfifo.h>
+#include "kfifo.h"
 
 #define QUEUE_SIZE      10
 
-
-/*  queue:
- *  
- *
- */
+/* Struct for 8bit element queue */
 typedef struct {
-        int items[QUEUE_SIZE];
+        uint8_t items[QUEUE_SIZE];
         int front;
         int rear;
 } queue;
 
+
+/* Queue manipulation functions */
 void init_queue(queue *q)
 {
-        q->front = -1;
+        q->front = 0;
         q->rear = 0;
 }
 
 int isEmpty(queue *q)
 {
-        return q->front == -1;
+        return q->front == q->rear;
 }
 
 int isFull(queue *q)
@@ -37,11 +35,8 @@ int enqueue(queue *q, int value)
 
         } else {
 
-                if (q->front == -1)
-                        q->front = 0;
-
-                q->rear = (q->rear + 1) % QUEUE_SIZE;
                 q->items[q->rear] = value;
+                q->rear = (q->rear + 1) % QUEUE_SIZE;
 
                 return 1;
         }

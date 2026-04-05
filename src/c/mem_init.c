@@ -3,8 +3,8 @@
 
 /* gdt_ptr: Struct containing the base address and the limit of a Global Descriptor Table */
 struct gdt_ptr {
-        unsigned short size; // The limit/size of the gdt     0-15 bit
-        unsigned int address; // The base address of the gdt  16-31 bit
+        uint16_t size; // The limit/size of the gdt     0-15 bit
+        uint32_t address; // The base address of the gdt  16-47 bit
 } __attribute__((packed));
 
 /** load_gdt:
@@ -22,16 +22,14 @@ void reload_segments();
 /** gdt_entry:
         * Sturcture of every entry (segment descriptor) in the GDT */
 struct gdt_entry {
-        unsigned short limit_low; // byte 0 - 1
-        unsigned short base_low; // byte 2 - 3
+        uint16_t limit_low; // byte 0 - 1
+        uint16_t base_low; // byte 2 - 3
 
-        unsigned char base_middle; // byte 4
-        unsigned char access_byte; // byte 5
+        uint8_t base_middle; // byte 4
+        uint8_t access_byte; // byte 5
 
-        unsigned char flags; // byte 6
-                                /* Bits:    | 7    4 | 3    0     | */
-                                /* Content: | Flags  | Limit high | */
-        unsigned char base_high; // byte 7
+        uint8_t flags; // byte 6
+        uint8_t base_high; // byte 7
 
 } __attribute__((packed));
 
@@ -83,7 +81,7 @@ void protected_mode_gdt()
         gdt[4].base_high = 0;
 
         struct gdt_ptr gdt_address;
-        gdt_address.address = (unsigned int) gdt;
+        gdt_address.address = (uint32_t) gdt;
         gdt_address.size = sizeof(gdt) - 1;
 
         load_gdt(&gdt_address);
