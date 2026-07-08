@@ -1,4 +1,4 @@
-![Corn](images/corn.png)
+![Corn](resource/image/corn.png)
 
 
 # CornOS
