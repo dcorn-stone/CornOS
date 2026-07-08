@@ -4,7 +4,7 @@
 # CornOS
 Learning OS development
 
-This repository is dedicated to learning how to develop and operating system by following the book [The little book about OS development](https://littleosbook.github.io/) and also with massive helps from the [OSDev wiki](https://wiki.osdev.org/).
+This repository is dedicated to learning how to develop an operating system by following [The little book about OS development](https://littleosbook.github.io/) and also with a massive amount of help from the [OSDev wiki](https://wiki.osdev.org/).
 
 # Prerequisites
 There are prerequisites if you want to try this on your platform:
