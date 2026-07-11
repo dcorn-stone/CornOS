@@ -39,6 +39,14 @@ load_gdt:
         lgdt [eax]              ; load the gdt table defined in the struct
         ret
 
+mask_interrupts:
+        cli                     ; Clears the interrupt flag so all interrupts are masked
+        ret
+
+unmask_interrupts:
+        sti                     ; Sets the interrupt flag to allow interrupts
+        ret
+
  
                                 ; reload_segments - reloads the segment registers
 

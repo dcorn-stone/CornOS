@@ -7,27 +7,27 @@ typedef struct {
         uint8_t items[QUEUE_SIZE];
         int front;
         int rear;
-} queue;
+} queue_t;
 
 
 /* Queue manipulation functions */
-void init_queue(queue *q)
+void init_queue(queue_t *q)
 {
         q->front = 0;
         q->rear = 0;
 }
 
-int isEmpty(queue *q)
+int isEmpty(queue_t *q)
 {
         return q->front == q->rear;
 }
 
-int isFull(queue *q)
+int isFull(queue_t *q)
 {
         return (q->rear + 1) % QUEUE_SIZE == q->front;
 }
 
-int enqueue(queue *q, int value)
+int enqueue(queue_t *q, int value)
 {
         if(isFull(q)){
 
@@ -42,7 +42,7 @@ int enqueue(queue *q, int value)
         }
 }
 
-void dequeue(queue *q)
+void dequeue(queue_t *q)
 {
         if(isEmpty(q))
                 return;

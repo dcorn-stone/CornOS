@@ -1,73 +1,43 @@
 #include "interrupts.h"
 #include "io.h"
 #include "kmain.h"
+#include "keyboard.h"
 #include <stdint.h>
 
-#define PIC1		0x20		/* IO base address for master PIC */
-#define PIC2		0xA0		/* IO base address for slave PIC */
-#define PIC1_COMMAND	PIC1
-#define PIC1_DATA	(PIC1+1)
-#define PIC2_COMMAND	PIC2
-#define PIC2_DATA	(PIC2+1)
+extern void interrupt_handler_0(void);
+extern void interrupt_handler_1(void);
+extern void interrupt_handler_2(void);
+extern void interrupt_handler_3(void);
+extern void interrupt_handler_4(void);
+extern void interrupt_handler_5(void);
+extern void interrupt_handler_6(void);
+extern void interrupt_handler_7(void);
+extern void interrupt_handler_8(void);
+extern void interrupt_handler_9(void);
+extern void interrupt_handler_10(void);
+extern void interrupt_handler_11(void);
+extern void interrupt_handler_12(void);
+extern void interrupt_handler_13(void);
+extern void interrupt_handler_14(void);
+extern void interrupt_handler_15(void);
+extern void interrupt_handler_16(void);
+extern void interrupt_handler_17(void);
+extern void interrupt_handler_18(void);
+extern void interrupt_handler_19(void);
+extern void interrupt_handler_20(void);
+extern void interrupt_handler_21(void);
+extern void interrupt_handler_22(void);
+extern void interrupt_handler_23(void);
+extern void interrupt_handler_24(void);
+extern void interrupt_handler_25(void);
+extern void interrupt_handler_26(void);
+extern void interrupt_handler_27(void);
+extern void interrupt_handler_28(void);
+extern void interrupt_handler_29(void);
+extern void interrupt_handler_30(void);
+extern void interrupt_handler_31(void);
 
-#define PIC_EOI		0x20		/* End-of-interrupt command code */
-
-#define PIC1_NEW_OFFSET 0x20
-#define PIC2_NEW_OFFSET 0x28
-
-/* reinitialize the PIC controllers, giving them specified vector offsets
-   rather than 8h and 70h, as configured by default */
-
-#define ICW1_ICW4	0x01		/* Indicates that ICW4 will be present */
-#define ICW1_SINGLE	0x02		/* Single (cascade) mode */
-#define ICW1_INTERVAL4	0x04		/* Call address interval 4 (8) */
-#define ICW1_LEVEL	0x08		/* Level triggered (edge) mode */
-#define ICW1_INIT	0x10		/* Initialization - required! */
-
-#define ICW4_8086	0x01		/* 8086/88 (MCS-80/85) mode */
-#define ICW4_AUTO	0x02		/* Auto (normal) EOI */
-#define ICW4_BUF_SLAVE	0x08		/* Buffered mode/slave */
-#define ICW4_BUF_MASTER	0x0C		/* Buffered mode/master */
-#define ICW4_SFNM	0x10		/* Special fully nested (not) */
-
-#define CASCADE_IRQ 2
-
-#define KBD_DATA_PORT   0x60
-
-extern void interrupt_handler_0();
-extern void interrupt_handler_1();
-extern void interrupt_handler_2();
-extern void interrupt_handler_3();
-extern void interrupt_handler_4();
-extern void interrupt_handler_5();
-extern void interrupt_handler_6();
-extern void interrupt_handler_7();
-extern void interrupt_handler_8();
-extern void interrupt_handler_9();
-extern void interrupt_handler_10();
-extern void interrupt_handler_11();
-extern void interrupt_handler_12();
-extern void interrupt_handler_13();
-extern void interrupt_handler_14();
-extern void interrupt_handler_15();
-extern void interrupt_handler_16();
-extern void interrupt_handler_17();
-extern void interrupt_handler_18();
-extern void interrupt_handler_19();
-extern void interrupt_handler_20();
-extern void interrupt_handler_21();
-extern void interrupt_handler_22();
-extern void interrupt_handler_23();
-extern void interrupt_handler_24();
-extern void interrupt_handler_25();
-extern void interrupt_handler_26();
-extern void interrupt_handler_27();
-extern void interrupt_handler_28();
-extern void interrupt_handler_29();
-extern void interrupt_handler_30();
-extern void interrupt_handler_31();
-
-extern void interrupt_handler_33();
+extern void interrupt_handler_33(void);
 
 /* idt_ptr: Struct containing the base address and the limit of a Intterupt Descriptor Table */
 struct idt_ptr{
@@ -140,26 +110,6 @@ void pic_sendEOI(uint8_t irq)
                 outb(PIC2_COMMAND, PIC_EOI);
 
         outb(PIC1_COMMAND, PIC_EOI);
-}
-
-/* read_scan_code;
- *  Read the scan code from the keyboard's data port
- *
- *  @return  The scan code from the keyboard
- */
-char read_scan_code()
-{
-        return inb(KBD_DATA_PORT);
-}
-
-void irq_1_keyboard_interrupt_handler(void)
-{
-        fb_clear();
-        uint32_t row = 0;
-        uint32_t col = 0;
-        char scan_code = read_scan_code();
-        kprintf(&row, &col, &scan_code, 2);
-        io_wait();
 }
 
 /*  pic_remap:
@@ -251,7 +201,7 @@ void irq_clear_mask(uint8_t irq_line)
 /* create_idt:
  *  creates an interrupt descriptor table and loads it
  */
-void create_idt()
+void create_idt(void)
 {
         static struct idt_entry idt[256];
 
@@ -356,18 +306,33 @@ void interrupt_handler(struct interrupt_stack_state *frame){
                         break;
                 case 24:
                         break;
+                case 25:
+                        break;
+                case 26:
+                        break;
+                case 27:
+                        break;
+                case 28:
+                        break;
+                case 29:
+                        break;
+                case 30:
+                        break;
+                case 31:
+                        break;
+                case 32:
+                        break;
                 case 33:
                         irq_1_keyboard_interrupt_handler();
                         break; 
- 
- 
         }
-        if (frame->interrupt >= PIC1_NEW_OFFSET && frame->interrupt <= PIC2_NEW_OFFSET){
+
+        if (frame->interrupt >= PIC1_NEW_OFFSET && frame->interrupt <= (PIC2_NEW_OFFSET + 7)){
                 pic_sendEOI(frame->interrupt - PIC1_NEW_OFFSET);
         }
 }
 
-void pic_init()
+void pic_init(void)
 {
         pic_remap(PIC1_NEW_OFFSET, PIC2_NEW_OFFSET);
         pic_disable();

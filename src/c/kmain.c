@@ -1,3 +1,4 @@
+#include "keyboard.h"
 #define FRAME_BUFFER 0x000B8000
 
 #define SERIAL_COM1_BASE                0x3F8      /* COM1 base port */
@@ -27,11 +28,11 @@
 #include "interrupts.h"
 
 /** cstrlen:
-        *  Count length of a charater buffer
-        *
-        *  @param *str  The buffer to be counted
-        *  @return  The length of the buffer passed
-        */
+ *  Count length of a charater buffer
+ *
+ *  @param *str  The buffer to be counted
+ *  @return  The length of the buffer passed
+ */
 unsigned int cstrlen(const char *str)
 {
         unsigned int len = 0;
@@ -43,14 +44,14 @@ unsigned int cstrlen(const char *str)
 }
 
 /** fb_write_cell:
-        *  Writes a character with the given foreground and background to position i
-        *  in the framebuffer.
-        *
-        *  @param i  The location in the framebuffer
-        *  @param c  The character
-        *  @param fg The foreground color
-        *  @param bg The background color
-        */
+ *  Writes a character with the given foreground and background to position i
+ *  in the framebuffer.
+ *
+ *  @param i  The location in the framebuffer
+ *  @param c  The character
+ *  @param fg The foreground color
+ *  @param bg The background color
+ */
 void fb_write_cell(uint32_t i, char c, uint8_t fg, uint8_t bg)
 {
         char *fb = (char *) FRAME_BUFFER;
@@ -60,11 +61,11 @@ void fb_write_cell(uint32_t i, char c, uint8_t fg, uint8_t bg)
 }
 
 /** fb_clear:
-        *  Clears the frame buffer (make blank screen)
-        */
+ *  Clears the frame buffer (make blank screen)
+ */
 void fb_clear()
 {
-        const int size = 80 * 25;
+        const int size = 80 * 25 * 2;
         char *fb = (char *) FRAME_BUFFER;
 
         for (int i = 0; i < size; i++)
@@ -72,13 +73,13 @@ void fb_clear()
 }
 
 /** fb_write:
-        *  Writes a character buffer to the frame buffer
-        *
-        *  @param *row  The pointer to the row number that is going to be written at
-        *  @param *col  The pointer to the column number that is going to be written at
-        *  @param *buf The pointer to the buffer that is going to be written out
-        *  @param len  The length of the buffer
-        */
+ *  Writes a character buffer to the frame buffer
+ *
+ *  @param *row  The pointer to the row number that is going to be written at
+ *  @param *col  The pointer to the column number that is going to be written at
+ *  @param *buf The pointer to the buffer that is going to be written out
+ *  @param len  The length of the buffer
+ */
 void fb_write(uint32_t *row, uint32_t *col, const char *buf, unsigned int len)
 {
         for (unsigned int i = 0; i < len; i++)
@@ -99,11 +100,11 @@ void fb_write(uint32_t *row, uint32_t *col, const char *buf, unsigned int len)
 }
 
 /** serial_write:
-        *  Writes a character buffer to the a serial port
-        *
-        *  @param *buf The pointer to the buffer that is going to be written
-        *  @param len  The length of the buffer
-        */
+ *  Writes a character buffer to the a serial port
+ *
+ *  @param *buf The pointer to the buffer that is going to be written
+ *  @param len  The length of the buffer
+ */
 void serial_write(const char *buf, unsigned int len)
 {
         for (unsigned int i = 0; i < len; i++)
@@ -111,20 +112,20 @@ void serial_write(const char *buf, unsigned int len)
 }
 
 /** kprintf:
-        *  Writes a buffer to a desination depending on the selected mode
-        *
-        **
-        *  @param *row The pointer to the row number stored, not used when mode == 1
-        *  @param *col The pointer to the column number stored, not used when mode == 1
-        *  @param *buf The buffer that is going to be written out
-        *  @param mode The selection of output mode:
-        *  0 - for writing to frame buffer
-        *  1 - for writing to serial port
-        *  2 - for writing to both
-        *
-        *  @return 0 If finished normally
-        *          1 If the given mode number is not in range
-        */
+ *  Writes a buffer to a desination depending on the selected mode
+ *
+ *
+ *  @param *row The pointer to the row number stored, not used when mode == 1
+ *  @param *col The pointer to the column number stored, not used when mode == 1
+ *  @param *buf The buffer that is going to be written out
+ *  @param mode The selection of output mode:
+ *  0 - for writing to frame buffer
+ *  1 - for writing to serial port
+ *  2 - for writing to both
+ *
+ *  @return 0 If finished normally
+ *          1 If the given mode number is not in range
+ */
 int kprintf(uint32_t *row, uint32_t *col, const char *buf, uint8_t mode)
 {
         switch(mode)
@@ -148,15 +149,15 @@ int kprintf(uint32_t *row, uint32_t *col, const char *buf, uint8_t mode)
 
 
 /* kernel main routine */
-void kmain()
+void kmain(void)
 {
        
         fb_clear();
         uint32_t row = 0;
         uint32_t col = 0;
 
-        char *greet = "Hello World!!!";
-        char *something = "Happy birthday to you Daniel!!!\n";
+        char *greet = "Hello World!!!\n";
+        char *something = "Testing for print function\nNew line\nAnother new line\n";
 
         kprintf(&row, &col, greet, 2);
 
@@ -166,10 +167,24 @@ void kmain()
         kprintf(&row, &col, "Protected mode segmentation is set and loaded\n", 2);
 
         create_idt();
-        kprintf(&row, &col, "IDT loaded", 2);
+        kprintf(&row, &col, "IDT loaded\n", 2);
+
+        init_ps2_kbd();
+        kprintf(&row, &col, "Keyboard event queue initialised\n", 2);
 
         pic_init();
+        kprintf(&row, &col, "PIC initialised, keyboard interrupt unmasked\n", 2);
 
+        keycode_t key;
+        char *message;
+        while (1){
+
+                key = key_queue_get_event();
+                if (key != NO_KEY){
+                        message = (char *)handle_keycode(key);
+                        kprintf(&row, &col, message, 2);
+                }
+        }
         pause();
 }
 

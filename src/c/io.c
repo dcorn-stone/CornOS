@@ -33,7 +33,7 @@
 /** io_wait:
         *  Wait for a very short and imprecise amount of time
         */
-void io_wait()
+void io_wait(void)
 {
         outb(0x80, 0);
 }

@@ -6,6 +6,6 @@
 /** protected_mode_gdt:
         *  Sets up the GDT for protected mode segmentation
         */
-void protected_mode_gdt();
+void protected_mode_gdt(void);
 
 #endif /* INCLUDE_MEM_INIT_H */

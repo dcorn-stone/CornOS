@@ -3,11 +3,13 @@
 
 #include <stdint.h>
 
+#define TIMEOUT 20
+
 /** pause:
         *  A infinite loop to keep the kernel alive
         *  Implemented in src/asm_functions.s
         */
-void pause();
+void pause(void);
 
 /** cstrlen:
         *  Count length of a charater buffer
@@ -36,7 +38,7 @@ int kprintf(uint32_t *row, uint32_t *col, const char *buf, uint8_t mode);
 /** fb_clear:
         *  Clears the frame buffer (make blank screen)
         */
-void fb_clear();
+void fb_clear(void);
 
 
 #endif /* INCLUDE_MAIN_H */

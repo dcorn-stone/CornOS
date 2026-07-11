@@ -8,19 +8,19 @@ struct gdt_ptr {
 } __attribute__((packed));
 
 /** load_gdt:
-        *  Loads the Global Descriptor Table
-        *
-        *  @param *gdt The struct pointer to the GDT with its base address and limit
-        */
+ *  Loads the Global Descriptor Table
+ *
+ *  @param *gdt The struct pointer to the GDT with its base address and limit
+ */
 void load_gdt(struct gdt_ptr *gdt);
 
 /** reload_segments:
-        *  Reloads the segment registers
-        */
+ *  Reloads the segment registers
+ */
 void reload_segments();
 
 /** gdt_entry:
-        * Sturcture of every entry (segment descriptor) in the GDT */
+ * Sturcture of every entry (segment descriptor) in the GDT */
 struct gdt_entry {
         uint16_t limit_low; // byte 0 - 1
         uint16_t base_low; // byte 2 - 3
@@ -34,8 +34,8 @@ struct gdt_entry {
 } __attribute__((packed));
 
 /** protected_mode_gdt:
-        *  Sets up the GDT for protected mode segmentation
-        */
+ *  Sets up the GDT for protected mode segmentation
+ */
 void protected_mode_gdt()
 {
         static struct gdt_entry gdt[5];

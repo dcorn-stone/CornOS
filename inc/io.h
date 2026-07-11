@@ -36,6 +36,6 @@ uint8_t inb(uint16_t port);
 /** io_wait:
  *  Wait for a very short and imprecise amount of time
  */
-void io_wait();
+void io_wait(void);
 
 #endif /* INCLUDE_IO_H */
