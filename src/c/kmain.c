@@ -249,7 +249,7 @@ void kprintf(const char *format, ...)
                 if (*format == '\0')
                         break;
 
-                char buffer[12] = {'\0','\0','\0','\0','\0','\0','\0','\0','\0','\0','\0','\0'};
+                char buffer[12];
                 char *str;
                 int32_t num;
 
