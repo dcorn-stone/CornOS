@@ -1,7 +1,6 @@
-#include "keyboard.h"
-#include "kmain.h"
-#include "io.h"
 #include <stdint.h>
+#include "keyboard.h"
+#include "io.h"
 
 #define KEYBOARD_EVENT_BUFFER 128
 

@@ -1,9 +1,12 @@
-#include "keyboard.h"
-#define FRAME_BUFFER 0x000B8000
+#include <stdarg.h>
+#include <stdint.h>
+#define FRAME_BUFFER            0x000B8000
 
-#define SERIAL_COM1_BASE                0x3F8      /* COM1 base port */
+/* COM1 base port */
+#define SERIAL_COM1_BASE        0x3F8      
 
-#define VGA_WIDTH 80
+#define VGA_WIDTH               80
+#define VGA_SIZE                VGA_WIDTH * 25 * 2
 
 #define FB_BLACK         0
 #define FB_BLUE          1
@@ -26,14 +29,19 @@
 #include "io.h"
 #include "mem_init.h"
 #include "interrupts.h"
+#include "keyboard.h"
 
-/** cstrlen:
- *  Count length of a charater buffer
+/* Tracker for the current position on the frame buffer */
+static uint8_t row = 0;
+static uint8_t col = 0;
+
+/* cstrlen:
+ *      Count the length of a string buffer
  *
- *  @param *str  The buffer to be counted
- *  @return  The length of the buffer passed
+ *      @param *str  The buffer to be counted
+ *      @return  The length of the buffer passed
  */
-unsigned int cstrlen(const char *str)
+uint32_t cstrlen(const char *str)
 {
         unsigned int len = 0;
 
@@ -43,108 +51,247 @@ unsigned int cstrlen(const char *str)
         return len;
 }
 
-/** fb_write_cell:
- *  Writes a character with the given foreground and background to position i
- *  in the framebuffer.
+/* reverse_string:
+ *      Reverses a string for the first len bytes
  *
- *  @param i  The location in the framebuffer
- *  @param c  The character
- *  @param fg The foreground color
- *  @param bg The background color
+ *      @param *str  The string to be reversed
+ *              len  Numbers of bytes from the string to be reversed
+ *
  */
-void fb_write_cell(uint32_t i, char c, uint8_t fg, uint8_t bg)
+void reverse_string(char *str, uint32_t len)
+{
+        if (!str || len < 2)
+                return;
+
+        uint32_t i = 0;
+        uint32_t j = len - 1;
+
+        while (i < j)
+        {
+                char tmp = str[i];
+                str[i] = str[j];
+                str[j] = tmp;
+
+                i++;
+                j--;
+        }
+}
+
+/* fb_screen_up:
+ *      Moves the entire frame buffer up by 1 row
+ */
+void fb_screen_up(void){
+
+        char *fb = (char *) FRAME_BUFFER;
+
+        for (uint32_t i = 0; i < ((VGA_SIZE - VGA_WIDTH*2)); i++)
+                fb[i] = fb[i+(VGA_WIDTH*2)];
+
+        for (uint16_t i = VGA_SIZE - (VGA_WIDTH * 2); i < VGA_SIZE; i++)
+                fb[i] = 0;
+
+}
+
+/* fb_write_cell:
+ *      Writes a character with the given foreground and background to position i
+ *      in the framebuffer.
+ *
+ *      @param c  The character
+ *      @param bg The background color
+ *      @param fg The foreground color
+ */
+void fb_write_cell(char c, uint8_t bg, uint8_t fg)
 {
         char *fb = (char *) FRAME_BUFFER;
 
-        fb[i] = c;
-        fb[i+1] = (((fg & 0x0f) << 4) | (bg & 0x0f));
+        uint32_t pos = ((row * VGA_WIDTH) + col) * 2;
+
+        if (c != '\n'){
+                fb[pos] = c;
+                fb[pos+1] = (((bg & 0x0f) << 4) | (fg & 0x0f));
+        }
+
+        if (col + 1 >= VGA_WIDTH || c == '\n'){
+                if (row + 1 >= 25){
+                        fb_screen_up();
+                        row--;
+                }
+
+                row++;
+                col = 0;
+        } else
+                col++;
+
+        fb_move_cursor((row * VGA_WIDTH) + col);
 }
 
-/** fb_clear:
- *  Clears the frame buffer (make blank screen)
+/* fb_clear:
+ *      Clears the frame buffer (make blank screen)
  */
 void fb_clear()
 {
-        const int size = 80 * 25 * 2;
         char *fb = (char *) FRAME_BUFFER;
 
-        for (int i = 0; i < size; i++)
+        for (uint32_t i = 0; i < VGA_SIZE; i++)
                 fb[i] = 0x00;
+
+        row = 0;
+        col = 0;
+        fb_move_cursor(0);
 }
 
-/** fb_write:
- *  Writes a character buffer to the frame buffer
- *
- *  @param *row  The pointer to the row number that is going to be written at
- *  @param *col  The pointer to the column number that is going to be written at
- *  @param *buf The pointer to the buffer that is going to be written out
- *  @param len  The length of the buffer
+/* kputchar:
+ *      prints one character
+ *      
+ *      @param c  The character to be printed
  */
-void fb_write(uint32_t *row, uint32_t *col, const char *buf, unsigned int len)
+void kputchar(char c)
 {
-        for (unsigned int i = 0; i < len; i++)
-        {       
-                if (buf[i] == '\n'){
-                        (*row)++;
-                        (*col) = 0;
-                } else {
-                        fb_write_cell(((*row) * VGA_WIDTH + (*col))*2, buf[i], FB_DARK_GREY, FB_GREEN);
+        fb_write_cell(c, FB_DARK_GREY, FB_GREEN);
+        serial_write_char(SERIAL_COM1_BASE, c);
+}
 
-                        if (*col+1 >= VGA_WIDTH)
-                                (*row)++;
-                        else
-                                (*col)++;
-                }
+/* kprint:
+ *      Writes a buffer to a desination depending on the selected mode
+ *
+ *      @param *buf  The buffer that is going to be written out
+ */
+void kprint(const char *buf)
+{
+        if (!buf)
+                buf = "(null)";
+
+        while(*buf)
+                kputchar(*buf++);
+
+}
+
+/* Number characters look up tables */
+static const char numbers_lower[] = "0123456789abcdef";
+static const char numbers_upper[] = "0123456789ABCDEF";
+
+/* int_to_str:
+ *      Converts integer into their equivalent in string
+ *      !!! When base == 16, num expects non-negative values,
+ *          otherwise unexpected behaviours may occur.
+ *      
+ *      @param num      The integer to convert
+ *             base     The base of the target converted string
+ *             capital  Whether the letters should be in upper case,
+ *                      not used when base <= 10
+ *                        1 - Upper case
+ *                        0 - Lower case
+ */
+void int_to_str(int32_t num, char *buffer, uint8_t base, uint8_t capital)
+{
+        uint8_t count_digit = 0;
+        uint8_t negative = 0;
+
+        if (base != 10 && base != 16){
+                return;
         }
-        fb_move_cursor(((*row) * VGA_WIDTH + (*col))*2);
-}
 
-/** serial_write:
- *  Writes a character buffer to the a serial port
- *
- *  @param *buf The pointer to the buffer that is going to be written
- *  @param len  The length of the buffer
- */
-void serial_write(const char *buf, unsigned int len)
-{
-        for (unsigned int i = 0; i < len; i++)
-                serial_write_char(SERIAL_COM1_BASE, buf[i]);
-}
+        if (num == 0){
+                buffer[0] = '0';
+                buffer[1] = '\0';
+                return;
+        }
 
-/** kprintf:
- *  Writes a buffer to a desination depending on the selected mode
- *
- *
- *  @param *row The pointer to the row number stored, not used when mode == 1
- *  @param *col The pointer to the column number stored, not used when mode == 1
- *  @param *buf The buffer that is going to be written out
- *  @param mode The selection of output mode:
- *  0 - for writing to frame buffer
- *  1 - for writing to serial port
- *  2 - for writing to both
- *
- *  @return 0 If finished normally
- *          1 If the given mode number is not in range
- */
-int kprintf(uint32_t *row, uint32_t *col, const char *buf, uint8_t mode)
-{
-        switch(mode)
+        if (num < 0) {
+                negative = 1;
+                num = -num;
+        }
+
+        const char *numbers = capital ? numbers_upper : numbers_lower;
+
+        while (num)
         {
-                case 0:
-                        fb_write(row, col, buf, cstrlen(buf));
-                        break;
-                case 1:
-                        serial_write(buf, cstrlen(buf));
-                        break;
-                case 2:
-                        fb_write(row, col, buf, cstrlen(buf));
-                        serial_write(buf, cstrlen(buf));
-                        break;
-                default:
-                        return 1;
+
+                buffer[count_digit] = numbers[num % base];
+
+                count_digit++;
+                num = (int32_t)(num / base);
         }
 
-        return 0;
+        if (negative && base == 10){
+                buffer[count_digit] = '-';
+                count_digit++;
+        }
+
+        reverse_string(buffer, count_digit);
+
+        buffer[count_digit] = '\0';
+}
+
+/* kprintf:
+ *      Prints to the VGA frame buffer and serial port COM1 with format
+ *
+ *      @param *format  A string describing the format of the target to be print
+ *              ...     Additional arguments to fill in placeholders
+ */
+void kprintf(const char *format, ...)
+{
+        va_list args;
+
+        va_start(args, format);
+
+
+        while (*format)
+        {
+
+                if (*format != '%'){
+                        kputchar(*format);
+                        format++;
+                        continue;
+                }
+
+                format++;
+                if (*format == '\0')
+                        break;
+
+                char buffer[12] = {'\0','\0','\0','\0','\0','\0','\0','\0','\0','\0','\0','\0'};
+                char *str;
+                int32_t num;
+
+                switch (*format)
+                {
+                        case 'c':
+                                kputchar((char)va_arg(args, int));
+                                break;
+
+                        case 's':
+                                str = va_arg(args, char*);
+                                kprint(str);
+                                break;
+
+                        case 'd':
+                                num = va_arg(args, int);
+                                int_to_str(num, buffer, 10, 0);
+                                kprint(buffer);
+                                break;
+
+                        case 'x':
+                                num = va_arg(args, int);
+                                int_to_str(num, buffer, 16, 0);
+                                kprint(buffer);
+                                break;
+
+                        case 'X':
+                                num = va_arg(args, int);
+                                int_to_str(num, buffer, 16, 1);
+                                kprint(buffer);
+                                break;
+
+                        default:
+                                kputchar('%');
+                                kputchar(*format);
+                                break;
+                }
+
+                format++;
+        }
+
+        va_end(args);
 }
 
 
@@ -153,36 +300,39 @@ void kmain(void)
 {
        
         fb_clear();
-        uint32_t row = 0;
-        uint32_t col = 0;
 
-        char *greet = "Hello World!!!\n";
-        char *something = "Testing for print function\nNew line\nAnother new line\n";
+        const char *greet = "Hello World!!!\n";
 
-        kprintf(&row, &col, greet, 2);
+        kprintf("%s", greet);
 
-        kprintf(&row, &col, something, 2);
+        kprintf("Testing for print function\nNew line\n");
+
+        kprintf("This should print a number %d\n", 53);
+
+        kprintf("This should print a number in hex %x\n", 124);
+
+        kprintf("This should print a number in upper case hex %X\n", 124);
 
         protected_mode_gdt();
-        kprintf(&row, &col, "Protected mode segmentation is set and loaded\n", 2);
+        kprintf("Protected mode segmentation is set and loaded\n");
 
         create_idt();
-        kprintf(&row, &col, "IDT loaded\n", 2);
+        kprintf("IDT loaded\n");
 
         init_ps2_kbd();
-        kprintf(&row, &col, "Keyboard event queue initialised\n", 2);
+        kprintf("Keyboard event queue initialised\n");
 
         pic_init();
-        kprintf(&row, &col, "PIC initialised, keyboard interrupt unmasked\n", 2);
+        kprintf("PIC initialised, keyboard interrupt unmasked\n");
 
         keycode_t key;
         char *message;
-        while (1){
-
+        while (1)
+        {
                 key = key_queue_get_event();
                 if (key != NO_KEY){
                         message = (char *)handle_keycode(key);
-                        kprintf(&row, &col, message, 2);
+                        kprintf(message);
                 }
         }
         pause();

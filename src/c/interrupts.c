@@ -1,8 +1,7 @@
+#include <stdint.h>
 #include "interrupts.h"
 #include "io.h"
-#include "kmain.h"
 #include "keyboard.h"
-#include <stdint.h>
 
 extern void interrupt_handler_0(void);
 extern void interrupt_handler_1(void);
