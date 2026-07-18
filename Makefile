@@ -32,15 +32,19 @@ ASM_OBJECTS := $(patsubst $(SRC_DIR)/asm/%.s,$(ASM_OBJ_DIR)/%.o,$(ASM_SOURCES))
 OBJECTS := $(C_OBJECTS) $(ASM_OBJECTS)
 
 # Targets
-all: kernel.elf
+all: kernel.elf program
+
+program: modules/program.s
+	nasm -f bin modules/program.s -o program
 
 kernel.elf: $(OBJECTS)
 	$(LD) $(LDFLAGS) $^ -o $@
 
-$(TARGET_DIR)/cornos.iso: kernel.elf
+$(TARGET_DIR)/cornos.iso: kernel.elf program
 	mkdir -p $(ISO_DIR)/boot
 	mkdir -p $(TARGET_DIR)
 	cp kernel.elf $(ISO_DIR)/boot/kernel.elf
+	cp program $(ISO_DIR)/boot/modules/program
 	grub-mkrescue -o $(TARGET_DIR)/cornos.iso $(ISO_DIR)
 
 # Run in emulator with debugging
@@ -67,6 +71,6 @@ $(ASM_OBJ_DIR)/%.o: $(SRC_DIR)/asm/%.s
 	$(AS) $(ASFLAGS) $< -o $@
 
 clean:
-	rm -rf $(BUILD_DIR) kernel.elf $(TARGET_DIR)
+	rm -rf $(BUILD_DIR) kernel.elf $(TARGET_DIR) program
 
 .PHONY: all clean run

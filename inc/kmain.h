@@ -19,11 +19,12 @@ void pause(void);
         */
 uint32_t cstrlen(const char *str);
 
-
-/** fb_clear:
-        *  Clears the frame buffer (make blank screen)
-        */
-void fb_clear(void);
-
+/* kprintf:
+ *      Prints to the VGA frame buffer and serial port COM1 with format
+ *
+ *      @param *format  A string describing the format of the target to be print
+ *              ...     Additional arguments to fill in placeholders
+ */
+void kprintf(const char *format, ...);
 
 #endif /* INCLUDE_MAIN_H */

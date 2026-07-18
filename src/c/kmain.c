@@ -25,11 +25,14 @@
 #define FB_LIGHT_BROWN   14
 #define FB_WHITE         15
 
+#include "multiboot.h"
 #include "kmain.h"
 #include "io.h"
 #include "mem_init.h"
 #include "interrupts.h"
 #include "keyboard.h"
+
+typedef void (*call_module_t)(void);
 
 /* Tracker for the current position on the frame buffer */
 static uint8_t row = 0;
@@ -296,8 +299,19 @@ void kprintf(const char *format, ...)
 
 
 /* kernel main routine */
-void kmain(void)
+void kmain(uint32_t ebx)
 {
+        multiboot_info_t *mbinfo = (multiboot_info_t *)ebx;
+
+        if (mbinfo->flags & MULTIBOOT_INFO_MODS && mbinfo->mods_count == 1){
+                multiboot_module_t *module = (multiboot_module_t *)mbinfo->mods_addr;
+                kprintf("Multiboot module address loaded\n");
+                kprintf("Loading module\n");
+                call_module_t start_program = (call_module_t)(module[0].mod_start);
+                kprintf("module start: %x\n", module[0].mod_start);
+                start_program();
+        }
+
        
         fb_clear();
 
