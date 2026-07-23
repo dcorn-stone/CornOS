@@ -38,16 +38,9 @@ load_gdt:
         mov eax, [esp + 4]      ; move the address to the gdt struct to the eax register
         lgdt [eax]              ; load the gdt table defined in the struct
         ret
-
-mask_interrupts:
-        cli                     ; Clears the interrupt flag so all interrupts are masked
-        ret
-
-unmask_interrupts:
-        sti                     ; Sets the interrupt flag to allow interrupts
-        ret
-
  
+
+
                                 ; reload_segments - reloads the segment registers
 
 reload_segments:                ; reload the CS register containing code selector
@@ -70,7 +63,6 @@ load_idt:
 
 
 pause:
-        sti
         hlt
         jmp $
 

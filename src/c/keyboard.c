@@ -745,6 +745,8 @@ void init_ps2_kbd(void)
 
 /* irq_1_keyboard_interrupt_handler:
  *      Interrupt handler for IRQ1 the keyboard interrupt from PIC
+ *
+ *      Offset 0x21 from the IDT
  */
 void irq_1_keyboard_interrupt_handler(void)
 {

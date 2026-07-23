@@ -131,7 +131,7 @@ void fb_write_cell(char c, uint8_t bg, uint8_t fg)
 /* fb_clear:
  *      Clears the frame buffer (make blank screen)
  */
-void fb_clear()
+void fb_clear(void)
 {
         char *fb = (char *) FRAME_BUFFER;
 
@@ -150,7 +150,7 @@ void fb_clear()
  */
 void kputchar(char c)
 {
-        fb_write_cell(c, FB_DARK_GREY, FB_GREEN);
+        fb_write_cell(c, FB_BLACK, FB_GREEN);
         serial_write_char(SERIAL_COM1_BASE, c);
 }
 
@@ -276,12 +276,14 @@ void kprintf(const char *format, ...)
                         case 'x':
                                 num = va_arg(args, int);
                                 int_to_str(num, buffer, 16, 0);
+                                kprint("0x");
                                 kprint(buffer);
                                 break;
 
                         case 'X':
                                 num = va_arg(args, int);
                                 int_to_str(num, buffer, 16, 1);
+                                kprint("0x");
                                 kprint(buffer);
                                 break;
 
@@ -341,6 +343,14 @@ void kmain(uint32_t ebx)
 
         keycode_t key;
         char *message;
+
+        // #pragma GCC diagnostic push
+        // #pragma GCC diagnostic ignored "-Wdiv-by-zero"
+        // int aaa = 53/0;
+        // #pragma GCC diagnostic pop
+        //
+        // kprintf("%d\n", aaa);
+        //
         while (1)
         {
                 key = key_queue_get_event();
@@ -349,7 +359,6 @@ void kmain(uint32_t ebx)
                         kprintf(message);
                 }
         }
-        pause();
 }
 
 

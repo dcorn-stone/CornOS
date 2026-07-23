@@ -33,15 +33,48 @@
 #define CASCADE_IRQ 2
 
 
+/* interrupt_stack_state:
+ *      Struct to save the values of all general purpose registers and values
+ *      pushed by the CPU caused by an interrupt
+ */
+typedef struct{
+        uint32_t edi;
+        uint32_t esi;
+        uint32_t ebp;
+        uint32_t esp_dummy;
+        uint32_t ebx;
+        uint32_t edx;
+        uint32_t ecx;
+        uint32_t eax;
+
+        uint32_t interrupt;
+
+        uint32_t error_code;
+        uint32_t eip;
+        uint32_t cs;
+        uint32_t eflags;
+} __attribute__((packed)) interrupt_stack_state_t;
+
 /* create_idt:
-        *  creates a interrupt descriptor table and loads it
-        */
+ *      creates an interrupt descriptor table and loads it
+ */
 void create_idt(void);
 
+/* pic_init:
+ *      Initialises the PIC controller
+ */
 void pic_init(void);
 
+/* mask_interrupts:
+ *      Mask all interrupts
+ *      Implemented in src/asm/asm_functions.s
+ */
 void mask_interrupts(void);
 
+/* unmask_interrupts:
+ *      Unmask all interrupts
+ *      Implemented in src/asm/asm_functions.s
+ */
 void unmask_interrupts(void);
 
 #endif /* INCLUDE_INTERRUPTS_H */
